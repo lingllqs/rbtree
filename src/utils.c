@@ -20,3 +20,9 @@ void die(const char *fmt, ...) {
     }
     exit(1);
 }
+
+int data_cmp(Data *src, Data *dest)
+{
+    int ret = memcmp(src->buffer, dest->buffer, src->buffer_type);
+    return ret;
+}
