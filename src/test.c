@@ -4,7 +4,7 @@
 
 #include "include/rbtree.h"
 
-#define N 9
+#define N 15
 
 struct cls {
     int num;
@@ -55,9 +55,6 @@ int main() {
         rbt_free_data(data2);
     }
 
-    printf("原始数据: ");
-    rbt_in_for_each(rbtree->root, print);
-    putchar(10);
     putchar(10);
 
     struct cls del_stu = {.num = 7};
@@ -89,7 +86,7 @@ int main() {
     printf("后序遍历: ");
     rbt_postorder_traversal(rbtree->root, print_node);
     putchar(10);
-    printf("层序遍历: ");
+    printf("层序遍历: \n");
     rbt_levelorder_traversal(rbtree, print_node);
     putchar(10);
 

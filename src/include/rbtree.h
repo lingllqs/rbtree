@@ -47,14 +47,10 @@ void fix_after_insert(RBTree *tree, RBNode *node);
 void rbt_delete_data(RBTree *tree, Data *data, CMP *cmp);
 void fix_after_delete(RBTree *tree, RBNode *node);
 
-void rbt_pre_for_each(RBNode *root, PRI *pri);
-void rbt_in_for_each(RBNode *root, PRI *pri);
-void rbt_post_for_each(RBNode *root, PRI *pri);
-
-void rbt_preorder_traversal(RBNode *root, PRI_NODE *pri_node);
-void rbt_inorder_traversal(RBNode *root, PRI_NODE *pri_node);
-void rbt_postorder_traversal(RBNode *root, PRI_NODE *pri_node);
-void rbt_levelorder_traversal(RBTree *tree, PRI_NODE *pri_node);
+void rbt_preorder_traversal(RBNode *root, PRI_NODE *pri_node);    // 前序遍历
+void rbt_inorder_traversal(RBNode *root, PRI_NODE *pri_node);     // 中序遍历
+void rbt_postorder_traversal(RBNode *root, PRI_NODE *pri_node);   // 后序遍历
+void rbt_levelorder_traversal(RBTree *tree, PRI_NODE *pri_node);  // 层序遍历
 
 void rbt_free_data(Data *data);
 void rbt_free_rbnode(RBNode *node);
@@ -68,6 +64,6 @@ Color color_of(RBNode *node);
 RBNode *left_of(RBNode *node);
 RBNode *right_of(RBNode *node);
 RBNode *parent_of(RBNode *node);
-uint32_t max_depth(RBNode *root);
+uint32_t rbt_depth(RBNode *root);
 
 #endif

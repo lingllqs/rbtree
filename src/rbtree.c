@@ -421,29 +421,6 @@ void fix_after_delete(RBTree *tree, RBNode *node) {
     rbt_set_color(node, BLACK);
 }
 
-void rbt_pre_for_each(RBNode *root, PRI *pri) {
-    if (root) {
-        pri(&root->data);
-        rbt_pre_for_each(root->left, pri);
-        rbt_pre_for_each(root->right, pri);
-    }
-}
-
-void rbt_in_for_each(RBNode *root, PRI *pri) {
-    if (root) {
-        rbt_in_for_each(root->left, pri);
-        pri(&root->data);
-        rbt_in_for_each(root->right, pri);
-    }
-}
-
-void rbt_post_for_each(RBNode *root, PRI *pri) {
-    if (root) {
-        rbt_post_for_each(root->left, pri);
-        rbt_post_for_each(root->right, pri);
-        pri(&root->data);
-    }
-}
 
 void rbt_preorder_traversal(RBNode *root, PRI_NODE *pri_node) {
     if (root) {
@@ -470,30 +447,36 @@ void rbt_postorder_traversal(RBNode *root, PRI_NODE *pri_node) {
 }
 
 void rbt_levelorder_traversal(RBTree *tree, PRI_NODE *pri_node) {
-    Queue *q = queue_new(tree->size, sizeof(RBNode));
+    Queue *queue = queue_new(tree->size, sizeof(RBNode));
     RBNode *root = tree->root;
     if (!root) return;
 
-    push(q, root);
+    uint32_t depth = rbt_depth(root);
+    push(queue, root);
 
-    while (!is_empty(q)) {
-        RBNode *node = q->elems + q->front * q->elem_type;
-        pop(q);
-        pri_node(node);
-        if (node->left) {
-            push(q, node->left);
+    while (!is_empty(queue)) {
+        uint32_t size = queue->size;
+        RBNode *node;
+        for (uint32_t i = 0; i < size; i++) {
+            node = queue->elems + queue->front * queue->elem_type;
+            pop(queue);
+            pri_node(node);
+            if (node->left) {
+                push(queue, node->left);
+            }
+            if (node->right) {
+                push(queue, node->right);
+            }
         }
-        if (node->right){
-            push(q, node->right);
-        }
+        printf("\n");
     }
 
-    free_queue(q);
+    free_queue(queue);
 }
 
-void rbt_free_data(Data *data){
-    if (data){
-        if (data->buffer){
+void rbt_free_data(Data *data) {
+    if (data) {
+        if (data->buffer) {
             free(data->buffer);
         }
         free(data);
@@ -502,15 +485,14 @@ void rbt_free_data(Data *data){
 void rbt_free_rbnode(RBNode *node) {
     if (node) {
         node->left = node->right = node->parent = NULL;
-        if (node->data.buffer){
+        if (node->data.buffer) {
             free(node->data.buffer);
         }
         free(node);
     }
 }
 
-void rbt_delete_node(RBNode *node)
-{
+void rbt_delete_node(RBNode *node) {
     if (!node) return;
 
     rbt_delete_node(node->left);
@@ -518,7 +500,7 @@ void rbt_delete_node(RBNode *node)
     rbt_free_rbnode(node);
 }
 
-void rbt_delete_tree(RBTree *tree){
+void rbt_delete_tree(RBTree *tree) {
     if (tree) {
         if (tree->root) {
             rbt_delete_node(tree->root);
