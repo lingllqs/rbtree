@@ -4,7 +4,7 @@
 
 #include "include/rbtree.h"
 
-#define N 10
+#define N 9
 
 struct cls {
     int num;
@@ -32,35 +32,32 @@ int mycmp(Data *s, Data *d) {
 }
 
 int main() {
-    RBTree *rbtree = rbtree_new();
+    RBTree *rbtree = rbt_rbtree_new();
 
     struct cls stu[N];
     for (int i = 0; i < N; i++) {
         stu[i].num = i + 1;
     }
-    // for (int i = 0; i < N; i++) {
-    //     printf("stu[%d].num = %d\n", i, stu[i].num);
-    // }
 
-    RBNode *rbnode[N];
+    // RBNode *rbnode[N];
 
-    Data data;
-    data.buffer_type = sizeof(struct cls);
-    data.buffer = malloc(data.buffer_type);
+    // Data data;
+    // data.buffer_type = sizeof(struct cls);
+    // data.buffer = malloc(data.buffer_type);
 
     printf("插入:\n");
     for (int i = 0; i < N; i++) {
-        memcpy(data.buffer, &stu[i], sizeof(struct cls));
-        rbnode[i] = rbnode_new(&data);
-        rbtree_insert(rbtree, rbnode[i], mycmp);
+        // memcpy(data.buffer, &stu[i], sizeof(struct cls));
+        // rbnode[i] = rbt_rbnode_new(&data);
+        // rbt_insert_node(rbtree, rbnode[i], mycmp);
+        Data *data2 = rbt_data_new(&stu[i], sizeof(struct cls));
+        rbt_insert_data(rbtree, data2, mycmp);
+        rbt_free_data(data2);
     }
 
-    // rbt_pre_for_each(rbtree->root, print);
-    // putchar(10);
+    printf("原始数据: ");
     rbt_in_for_each(rbtree->root, print);
     putchar(10);
-    // rbt_post_for_each(rbtree->root, print);
-    // putchar(10);
     putchar(10);
 
     struct cls del_stu = {.num = 7};
@@ -79,19 +76,29 @@ int main() {
     //     printf("--\n");
     // }
 
-    printf("删除:\n");
-    rbtree_delete(rbtree, &del_data, mycmp);
-    printf("del_stu.num = %d\n", del_stu.num);
+    // printf("删除:\n");
+    // rbt_delete(rbtree, &del_data, mycmp);
+    // printf("del_stu.num = %d\n", del_stu.num);
 
-    // rbt_preorder_traversal(rbtree->root, print_node);
-    // putchar(10);
+    printf("前序遍历: ");
+    rbt_preorder_traversal(rbtree->root, print_node);
+    putchar(10);
+    printf("中序遍历: ");
     rbt_inorder_traversal(rbtree->root, print_node);
     putchar(10);
-    // rbt_postorder_traversal(rbtree->root, print_node);
-    // putchar(10);
+    printf("后序遍历: ");
+    rbt_postorder_traversal(rbtree->root, print_node);
+    putchar(10);
+    printf("层序遍历: ");
+    rbt_levelorder_traversal(rbtree, print_node);
+    putchar(10);
 
-    free(data.buffer);
+    printf("Depth of rbtree: %d\n", max_depth(rbtree->root));
+
+    // free(data.buffer);
     free(del_data.buffer);
+
+    rbt_delete_tree(rbtree);
 
     return 0;
 }
