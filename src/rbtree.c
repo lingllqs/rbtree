@@ -1,12 +1,14 @@
 #include "include/rbtree.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "../../queue/queue.h"
 #include "include/utils.h"
 
-Data *data_new(void *buffer, int buffer_type) {
+Data *rbt_data_new(void *buffer, int buffer_type) {
     Data *new_data = malloc(sizeof(Data));
     if (NULL == new_data) {
         die("malloc new_data");
@@ -23,7 +25,7 @@ Data *data_new(void *buffer, int buffer_type) {
     return new_data;
 }
 
-RBNode *rbnode_new(Data *data) {
+RBNode *rbt_rbnode_new(Data *data) {
     RBNode *new_node = malloc(sizeof(RBNode));
     if (NULL == new_node) {
         die("malloc new_node");
@@ -42,7 +44,7 @@ RBNode *rbnode_new(Data *data) {
     return new_node;
 }
 
-RBTree *rbtree_new() {
+RBTree *rbt_rbtree_new() {
     RBTree *new_tree = malloc(sizeof(RBTree));
     if (NULL == new_tree) {
         die("malloc new_tree");
@@ -75,7 +77,7 @@ RBTree *rbtree_new() {
  *            @   @                             @   @
  *
  */
-void left_rotate(RBTree *tree, RBNode *node) {
+void rbt_left_rotate(RBTree *tree, RBNode *node) {
     if (node) {
         RBNode *pp = node->parent;
         RBNode *pr = node->right;
@@ -121,7 +123,7 @@ void left_rotate(RBTree *tree, RBNode *node) {
  *           @   @                                     @   @
  *
  */
-void right_rotate(RBTree *tree, RBNode *node) {
+void rbt_right_rotate(RBTree *tree, RBNode *node) {
     if (node) {
         RBNode *pp = node->parent;
         RBNode *pl = node->left;
@@ -153,8 +155,7 @@ void right_rotate(RBTree *tree, RBNode *node) {
 /*
  * 找前驱结点(小于当前结点的最大值)
  */
-RBNode *precursor(RBNode *node) {
-    // printf("before precursor\n");
+RBNode *rbt_precursor(RBNode *node) {
     if (node) {
         /* 当前节点有左孩子 */
         RBNode *ptr = node->left;
@@ -172,23 +173,12 @@ RBNode *precursor(RBNode *node) {
                 c = p;
                 p = p->parent;
             }
-            // printf("second situation in precursor\n");
 
             return p;
         }
 
         return ptr;
     }
-    // printf("end of precursor\n");
-
-    return NULL;
-}
-
-/*
- * 找后继结点(大于当前结点的最小值)
- */
-RBNode *successor(RBNode *node) {
-    // printf("before successor\n");
     if (node) {
         RBNode *ptr = node->right;
         if (ptr) {
@@ -203,16 +193,14 @@ RBNode *successor(RBNode *node) {
                 c = p;
                 p = p->parent;
             }
-            // printf("second situation in successor\n");
             return p;
         }
     }
 
-    // printf("end of successor\n");
     return NULL;
 }
 
-RBNode *rbn_search(RBTree *tree, Data *data, CMP *cmp) {
+RBNode *rbt_search_node(RBTree *tree, Data *data, CMP *cmp) {
     RBNode *p = tree->root;
     while (p) {
         int ret = cmp(data, &p->data);
@@ -227,7 +215,7 @@ RBNode *rbn_search(RBTree *tree, Data *data, CMP *cmp) {
     return NULL;
 }
 
-void rbtree_insert(RBTree *tree, RBNode *node, CMP *cmp) {
+void rbt_insert_node(RBTree *tree, RBNode *node, CMP *cmp) {
     if (!tree || !node) return;
 
     /* 第一个结点 */
@@ -240,9 +228,7 @@ void rbtree_insert(RBTree *tree, RBNode *node, CMP *cmp) {
         RBNode *pp = p;
         int ret;
         while (p) {
-            // printf("before second node cmp\n");
             ret = cmp(&node->data, &p->data);
-            // printf("after second node cmp\n");
             pp = p;
             if (ret < 0) {
                 p = p->left;
@@ -260,13 +246,18 @@ void rbtree_insert(RBTree *tree, RBNode *node, CMP *cmp) {
     }
     tree->size++;
 
-    // printf("before fix_after_insert\n");
     fix_after_insert(tree, node);
-    // printf("after fix_after_insert\n");
+}
+
+void rbt_insert_data(RBTree *tree, Data *data, CMP *cmp) {
+    RBNode *node = rbt_rbnode_new(data);
+    if (!node) {
+        die("rbt_insert_data: new node");
+    }
+    rbt_insert_node(tree, node, cmp);
 }
 
 void fix_after_insert(RBTree *tree, RBNode *node) {
-    // printf("begin fix_after_insert\n");
     if (!tree || !node) {
         return;
     }
@@ -275,70 +266,51 @@ void fix_after_insert(RBTree *tree, RBNode *node) {
         /* node 结点的 parent 结点是 grandparent 的 left 结点 */
         if (node->parent == node->parent->parent->left) {
             if (color_of(node->parent->parent->right) == RED) {
-                set_color(node->parent, BLACK);
-                set_color(node->parent->parent->right, BLACK);
-                set_color(node->parent->parent, RED);
+                rbt_set_color(node->parent, BLACK);
+                rbt_set_color(node->parent->parent->right, BLACK);
+                rbt_set_color(node->parent->parent, RED);
                 node = node->parent->parent;
             } else {
                 if (node == node->parent->right) {
                     node = node->parent;
-                    left_rotate(tree, node);
+                    rbt_left_rotate(tree, node);
                 }
-                set_color(node->parent, BLACK);
-                set_color(node->parent->parent, RED);
-                right_rotate(tree, node->parent->parent);
+                rbt_set_color(node->parent, BLACK);
+                rbt_set_color(node->parent->parent, RED);
+                rbt_right_rotate(tree, node->parent->parent);
             }
         }
         /* node 结点的 parent 是 grandparent 的 right 结点 */
         else {
             if (color_of(node->parent->parent->left) == RED) {
-                set_color(node->parent, BLACK);
-                set_color(node->parent->parent->left, BLACK);
-                set_color(node->parent->parent, RED);
+                rbt_set_color(node->parent, BLACK);
+                rbt_set_color(node->parent->parent->left, BLACK);
+                rbt_set_color(node->parent->parent, RED);
                 node = node->parent->parent;
             } else {
                 if (node == node->parent->left) {
                     node = node->parent;
-                    right_rotate(tree, node);
+                    rbt_right_rotate(tree, node);
                 }
-                set_color(node->parent, BLACK);
-                set_color(node->parent->parent, RED);
-                left_rotate(tree, node->parent->parent);
+                rbt_set_color(node->parent, BLACK);
+                rbt_set_color(node->parent->parent, RED);
+                rbt_left_rotate(tree, node->parent->parent);
             }
         }
     }
 
-    set_color(tree->root, BLACK);
-    // printf("endof fix_after_insert\n");
+    rbt_set_color(tree->root, BLACK);
 }
 
-struct clss {
-    int num;
-};
-void print_data(Data *d) {
-    struct clss *c = (struct clss *)(d->buffer);
-    printf("%-3d ", c->num);
-}
-void rbtree_delete(RBTree *tree, Data *data, CMP *cmp) {
-    RBNode *node = rbn_search(tree, data, cmp);
-    // RBNode *pnode = node;
+void rbt_delete_data(RBTree *tree, Data *data, CMP *cmp) {
+    RBNode *node = rbt_search_node(tree, data, cmp);
     if (!node || !tree) return;
 
     /* 转换成删除前驱结点或后继结点的形式 */
     if (node->left && node->right) {
-        RBNode *xnode = precursor(node);  // 获得前驱结点
+        RBNode *xnode = rbt_precursor(node);  // 获得前驱结点
         xchg_data(xnode, node);
-        // void *ret = memmove(node->data.buffer, xnode->data.buffer, xnode->data.buffer_type);
-        // if (ret) {
-        //     printf("memmove success\n");
-        // }
-        // print_data(&node->data);
-        // printf("\n");
         node = xnode;
-        // print_data(&xnode->data);
-        // printf("\n");
-        // print_data(&pnode->data);
-        // printf("\n");
     }
 
     /* 获取实际删除结点的 child 结点的情况 */
@@ -357,7 +329,7 @@ void rbtree_delete(RBTree *tree, Data *data, CMP *cmp) {
             }
         }
 
-        free_rbnode(node);
+        rbt_free_rbnode(node);
         fix_after_delete(tree, m_node);
     }
     /* 前驱或者后继节点没有 child 节点 */
@@ -378,7 +350,7 @@ void rbtree_delete(RBTree *tree, Data *data, CMP *cmp) {
                 node->parent->right = NULL;
             }
         }
-        free_rbnode(node);
+        rbt_free_rbnode(node);
     }
 
     tree->size--;
@@ -392,27 +364,27 @@ void fix_after_delete(RBTree *tree, RBNode *node) {
             /* 获取 sibling 结点 */
             RBNode *sib_node = node->parent->right;
             if (color_of(sib_node) == RED) {
-                set_color(sib_node, BLACK);
-                set_color(node->parent, RED);
-                left_rotate(tree, node->parent);
+                rbt_set_color(sib_node, BLACK);
+                rbt_set_color(node->parent, RED);
+                rbt_left_rotate(tree, node->parent);
                 sib_node = node->parent->right;
             }
 
             if (color_of(sib_node->left) == BLACK && color_of(sib_node->right) == BLACK) {
-                set_color(sib_node, RED);
+                rbt_set_color(sib_node, RED);
                 node = node->parent;
             } else {
                 if (color_of(sib_node->right) == BLACK) {
-                    set_color(sib_node->left, BLACK);
-                    set_color(sib_node, RED);
-                    right_rotate(tree, sib_node);
+                    rbt_set_color(sib_node->left, BLACK);
+                    rbt_set_color(sib_node, RED);
+                    rbt_right_rotate(tree, sib_node);
                     sib_node = node->parent->right;
                 }
 
-                set_color(sib_node, color_of(sib_node->parent));
-                set_color(node->parent, BLACK);
-                set_color(sib_node->right, BLACK);
-                left_rotate(tree, node->parent);
+                rbt_set_color(sib_node, color_of(sib_node->parent));
+                rbt_set_color(node->parent, BLACK);
+                rbt_set_color(sib_node->right, BLACK);
+                rbt_left_rotate(tree, node->parent);
                 node = tree->root;
             }
         }
@@ -420,33 +392,33 @@ void fix_after_delete(RBTree *tree, RBNode *node) {
         else {
             RBNode *sib_node = node->parent->left;
             if (color_of(sib_node) == RED) {
-                set_color(sib_node, BLACK);
-                set_color(node->parent, RED);
-                left_rotate(tree, node->parent);
+                rbt_set_color(sib_node, BLACK);
+                rbt_set_color(node->parent, RED);
+                rbt_left_rotate(tree, node->parent);
                 sib_node = node->parent->left;
             }
 
             if (color_of(sib_node->left) == BLACK && color_of(sib_node->right) == BLACK) {
-                set_color(sib_node, RED);
+                rbt_set_color(sib_node, RED);
                 node = node->parent;
             } else {
                 if (color_of(sib_node->left) == BLACK) {
-                    set_color(sib_node->right, BLACK);
-                    set_color(sib_node, RED);
-                    right_rotate(tree, sib_node);
+                    rbt_set_color(sib_node->right, BLACK);
+                    rbt_set_color(sib_node, RED);
+                    rbt_right_rotate(tree, sib_node);
                     sib_node = node->parent->left;
                 }
 
-                set_color(sib_node, color_of(sib_node->parent));
-                set_color(node->parent, BLACK);
-                set_color(sib_node->left, BLACK);
-                left_rotate(tree, node->parent);
+                rbt_set_color(sib_node, color_of(sib_node->parent));
+                rbt_set_color(node->parent, BLACK);
+                rbt_set_color(sib_node->left, BLACK);
+                rbt_left_rotate(tree, node->parent);
                 node = tree->root;
             }
         }
     }
 
-    set_color(node, BLACK);
+    rbt_set_color(node, BLACK);
 }
 
 void rbt_pre_for_each(RBNode *root, PRI *pri) {
@@ -497,15 +469,65 @@ void rbt_postorder_traversal(RBNode *root, PRI_NODE *pri_node) {
     }
 }
 
-void free_rbnode(RBNode *node) {
+void rbt_levelorder_traversal(RBTree *tree, PRI_NODE *pri_node) {
+    Queue *q = queue_new(tree->size, sizeof(RBNode));
+    RBNode *root = tree->root;
+    if (!root) return;
+
+    push(q, root);
+
+    while (!is_empty(q)) {
+        RBNode *node = q->elems + q->front * q->elem_type;
+        pop(q);
+        pri_node(node);
+        if (node->left) {
+            push(q, node->left);
+        }
+        if (node->right){
+            push(q, node->right);
+        }
+    }
+
+    free_queue(q);
+}
+
+void rbt_free_data(Data *data){
+    if (data){
+        if (data->buffer){
+            free(data->buffer);
+        }
+        free(data);
+    }
+}
+void rbt_free_rbnode(RBNode *node) {
     if (node) {
         node->left = node->right = node->parent = NULL;
-        free(node->data.buffer);
+        if (node->data.buffer){
+            free(node->data.buffer);
+        }
         free(node);
     }
 }
 
-void set_color(RBNode *node, Color color) {
+void rbt_delete_node(RBNode *node)
+{
+    if (!node) return;
+
+    rbt_delete_node(node->left);
+    rbt_delete_node(node->right);
+    rbt_free_rbnode(node);
+}
+
+void rbt_delete_tree(RBTree *tree){
+    if (tree) {
+        if (tree->root) {
+            rbt_delete_node(tree->root);
+        }
+        free(tree);
+    }
+}
+
+void rbt_set_color(RBNode *node, Color color) {
     if (node) {
         node->color = color;
     }
@@ -514,8 +536,8 @@ void set_color(RBNode *node, Color color) {
 void xchg_data(RBNode *xnode, RBNode *ynode) {
     if (!xnode || !ynode) return;
 
-    RBNode *tx = rbnode_new(&xnode->data);
-    RBNode *ty = rbnode_new(&ynode->data);
+    RBNode *tx = rbt_rbnode_new(&xnode->data);
+    RBNode *ty = rbt_rbnode_new(&ynode->data);
 
     if (xnode->data.buffer_type > ynode->data.buffer_type) {
         ynode->data.buffer = realloc(ynode->data.buffer, xnode->data.buffer_type);
@@ -538,8 +560,8 @@ void xchg_data(RBNode *xnode, RBNode *ynode) {
         memcpy(ynode->data.buffer, tx->data.buffer, tx->data.buffer_type);
     }
 
-    free_rbnode(tx);
-    free_rbnode(ty);
+    rbt_free_rbnode(tx);
+    rbt_free_rbnode(ty);
 }
 
 Color color_of(RBNode *node) {
@@ -556,4 +578,14 @@ RBNode *right_of(RBNode *node) {
 
 RBNode *parent_of(RBNode *node) {
     return (node ? node->parent : NULL);
+}
+
+uint32_t max_depth(RBNode *root) {
+    if (!root) {
+        return 0;
+    } else {
+        uint32_t left_depth = max_depth(root->left);
+        uint32_t right_depth = max_depth(root->right);
+        return (left_depth > right_depth ? left_depth : right_depth) + 1;
+    }
 }
