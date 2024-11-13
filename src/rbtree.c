@@ -451,7 +451,6 @@ void rbt_levelorder_traversal(RBTree *tree, PRI_NODE *pri_node) {
     RBNode *root = tree->root;
     if (!root) return;
 
-    uint32_t depth = rbt_depth(root);
     push(queue, root);
 
     while (!is_empty(queue)) {
@@ -562,12 +561,12 @@ RBNode *parent_of(RBNode *node) {
     return (node ? node->parent : NULL);
 }
 
-uint32_t max_depth(RBNode *root) {
+uint32_t rbt_depth(RBNode *root) {
     if (!root) {
         return 0;
     } else {
-        uint32_t left_depth = max_depth(root->left);
-        uint32_t right_depth = max_depth(root->right);
+        uint32_t left_depth = rbt_depth(root->left);
+        uint32_t right_depth = rbt_depth(root->right);
         return (left_depth > right_depth ? left_depth : right_depth) + 1;
     }
 }

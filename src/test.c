@@ -90,7 +90,7 @@ int main() {
     rbt_levelorder_traversal(rbtree, print_node);
     putchar(10);
 
-    printf("Depth of rbtree: %d\n", max_depth(rbtree->root));
+    printf("Depth of rbtree: %d\n", rbt_depth(rbtree->root));
 
     // free(data.buffer);
     free(del_data.buffer);
