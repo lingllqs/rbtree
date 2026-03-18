@@ -1,12 +1,13 @@
-#include "include/rbtree.h"
+#include "rbtree.h"
 
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../queue/queue.h"
-#include "include/utils.h"
+#include "queue.h"
+#include "utils.h"
 
 Data *rbt_data_new(void *buffer, int buffer_type) {
     Data *new_data = malloc(sizeof(Data));
@@ -56,27 +57,6 @@ RBTree *rbt_rbtree_new() {
     return new_tree;
 }
 
-/*
- * 总共需要断开三个地方的指针
- *     pp -> @                              pp -> @
- *            \                                    \
- *     node -> @                                    @ <- pr
- *            / \           --------->             / \
- *           @   @ <- pr                  node -> @   @
- *              / \                              / \
- *             @   @                            @   @
- *
- *-------------------------------------------------------------
-
- *        pp -> @                               pp -> @
- *             /                                     /
- *    node -> @             --------->              @ <- pr
- *           / \                                   / \
- *          @   @ <- pr                   node -> @   @
- *             / \                               / \
- *            @   @                             @   @
- *
- */
 void rbt_left_rotate(RBTree *tree, RBNode *node) {
     if (node) {
         RBNode *pp = node->parent;
@@ -102,27 +82,6 @@ void rbt_left_rotate(RBTree *tree, RBNode *node) {
     }
 }
 
-/*
- * 总共需要断开三个地方的指针
- *       pp -> @                                pp -> @
- *              \                                      \
- *               @ <- node                      node -> @
- *              / \           --------->               / \
- *       pl -> @   @                                  @   @ <- pl
- *            / \                                        / \
- *           @   @                                      @   @
- *
- *----------------------------------------------------------------
-
- *           pp -> @                               pp -> @
- *                /                                     /
- *               @ <- node    --------->       node -> @
- *              / \                                   / \
- *       pl -> @   @                                 @   @ <- pl
- *            / \                                       / \
- *           @   @                                     @   @
- *
- */
 void rbt_right_rotate(RBTree *tree, RBNode *node) {
     if (node) {
         RBNode *pp = node->parent;
@@ -152,52 +111,41 @@ void rbt_right_rotate(RBTree *tree, RBNode *node) {
     }
 }
 
-/*
- * 找前驱结点(小于当前结点的最大值)
- */
+// 找前驱结点(小于当前结点的最大值)
 RBNode *rbt_precursor(RBNode *node) {
-    if (node) {
-        /* 当前节点有左孩子 */
-        RBNode *ptr = node->left;
-        if (ptr) {
-            while (ptr->right) {
-                ptr = ptr->right;
-            }
-            return ptr;
-        }
-        /* 当前节点没有左孩子 */
-        else {
-            RBNode *c = node;       // 当前结点
-            RBNode *p = c->parent;  // 当前结点的 parent 结点
-            while (p && c == p->left) {
-                c = p;
-                p = p->parent;
-            }
+    if (!node) return NULL;
 
-            return p;
-        }
-
-        return ptr;
+    if (node->left) {
+        RBNode *p = node->left;
+        while (p->right) p = p->right;
+        return p;
     }
-    if (node) {
-        RBNode *ptr = node->right;
-        if (ptr) {
-            while (ptr->left) {
-                ptr = ptr->left;
-            }
-            return ptr;
-        } else {
-            RBNode *c = node;
-            RBNode *p = node->parent;
-            while (p && c == p->right) {
-                c = p;
-                p = p->parent;
-            }
-            return p;
-        }
+    RBNode *c = node;
+    RBNode *p = c->parent;
+    while (p && c == p->left) {
+        c = p;
+        p = p->parent;
     }
 
-    return NULL;
+    return p;
+}
+
+RBNode *rbt_successor(RBNode *node) {
+    if (!node) return NULL;
+
+    if (node->right) {
+        RBNode *p = node->right;
+        while (p->left) p = p->left;
+        return p;
+    }
+
+    RBNode *c = node;
+    RBNode *p = c->parent;
+    while (p && c == p->right) {
+        c = p;
+        p = p->parent;
+    }
+    return p;
 }
 
 RBNode *rbt_search_node(RBTree *tree, Data *data, CMP *cmp) {
@@ -421,7 +369,6 @@ void fix_after_delete(RBTree *tree, RBNode *node) {
     rbt_set_color(node, BLACK);
 }
 
-
 void rbt_preorder_traversal(RBNode *root, PRI_NODE *pri_node) {
     if (root) {
         pri_node(root);
@@ -456,7 +403,7 @@ void rbt_levelorder_traversal(RBTree *tree, PRI_NODE *pri_node) {
     while (!is_empty(queue)) {
         uint32_t size = queue->size;
         RBNode *node;
-        for (uint32_t i = 0; i < size; i++) {
+        for (size_t i = 0; i < size; i++) {
             node = queue->elems + queue->front * queue->elem_type;
             pop(queue);
             pri_node(node);
@@ -470,7 +417,7 @@ void rbt_levelorder_traversal(RBTree *tree, PRI_NODE *pri_node) {
         printf("\n");
     }
 
-    free_queue(queue);
+    queue_free(queue);
 }
 
 void rbt_free_data(Data *data) {

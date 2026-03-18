@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "include/rbtree.h"
+#include "rbtree.h"
 
 #define N 15
 
